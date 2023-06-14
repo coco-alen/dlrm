@@ -1265,7 +1265,7 @@ def loadDataset(
         print("Reading pre-processed data=%s" % (str(pro_data)))
         file = str(pro_data)
     else:
-        print("Reading raw data=%s" % (str(raw_path)))
+        print("Reading raw data = %s" % (str(raw_path)))
         file = getCriteoAdData(
             raw_path,
             o_filename,
