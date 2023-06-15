@@ -62,6 +62,7 @@ import json
 import sys
 import time
 
+from utils import *
 # onnx
 # The onnx import causes deprecation warnings every time workers
 # are spawned during testing. So, we filter out those warnings.
@@ -1014,6 +1015,8 @@ def run():
     global writer
     args = parser.parse_args()
 
+    print_args(args)
+
     if args.dataset_multiprocessing:
         assert float(sys.version[:3]) > 3.7, (
             "The dataset_multiprocessing "
@@ -1283,7 +1286,7 @@ def run():
         weighted_pooling=args.weighted_pooling,
         loss_function=args.loss_function,
     )
-
+    print(dlrm)
     # test prints
     if args.debug_mode:
         print("initial parameters (weights and bias):")

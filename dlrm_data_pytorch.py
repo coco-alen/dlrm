@@ -38,8 +38,6 @@ import numpy as np
 import torch
 from numpy import random as ra
 from torch.utils.data import Dataset, RandomSampler
-
-
 # Kaggle Display Advertising Challenge Dataset
 # dataset (str): name of dataset (Kaggle or Terabyte)
 # randomize (str): determines randomization scheme
@@ -325,9 +323,9 @@ class CriteoDataset(Dataset):
 def collate_wrapper_criteo_offset(list_of_tuples):
     # where each tuple is (X_int, X_cat, y)
     transposed_data = list(zip(*list_of_tuples))
-    X_int = torch.log(torch.tensor(transposed_data[0], dtype=torch.float) + 1)
-    X_cat = torch.tensor(transposed_data[1], dtype=torch.long)
-    T = torch.tensor(transposed_data[2], dtype=torch.float32).view(-1, 1)
+    X_int = torch.log(torch.tensor(np.array(transposed_data[0]), dtype=torch.float) + 1)
+    X_cat = torch.tensor(np.array(transposed_data[1]), dtype=torch.long)
+    T = torch.tensor(np.array(transposed_data[2]), dtype=torch.float32).view(-1, 1)
 
     batchSize = X_cat.shape[0]
     featureCnt = X_cat.shape[1]
@@ -1235,7 +1233,6 @@ if __name__ == "__main__":
     parser.add_argument("--numpy-rand-seed", type=int, default=123)
     parser.add_argument("--print-precision", type=int, default=5)
     args = parser.parse_args()
-
     ### some basic setup ###
     np.random.seed(args.numpy_rand_seed)
     np.set_printoptions(precision=args.print_precision)
