@@ -139,3 +139,4 @@ cython_debug/
 
 #ckpt
 run_kaggle_pt/
+ckpt/

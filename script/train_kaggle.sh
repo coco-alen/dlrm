@@ -1,4 +1,10 @@
+#!/bin/bash
 echo " -----  run pytorch dlrm train  -----"
+
+nbatches=2399
+lrNumWarmupSteps=$((10*nbatches))
+lrDecayStartStep=$((40*nbatches))
+lrNumDecaySteps=$((60*nbatches))
 
 # python -u -m torch.distributed.launch --nproc_per_node=8  dlrm_s_pytorch.py \
 CUDA_VISIBLE_DEVICES=1,2,3,4,5,6,7 python -u dlrm_s_pytorch.py \
@@ -13,7 +19,11 @@ CUDA_VISIBLE_DEVICES=1,2,3,4,5,6,7 python -u dlrm_s_pytorch.py \
     --round-targets=True \
     --learning-rate=0.1 \
     --mini-batch-size=16384 \
-    --nepochs=200 \
+    --nepochs=70 \
+    --test-freq=1 \
+    --lr-num-warmup-steps=${lrNumWarmupSteps} \
+    --lr-decay-start-step=${lrDecayStartStep} \
+    --lr-num-decay-steps=${lrNumDecaySteps} \
     --print-freq=512 \
     --print-time \
     --num-workers=64 \

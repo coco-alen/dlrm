@@ -1619,7 +1619,8 @@ def run():
                     should_test = (
                         (args.test_freq > 0)
                         and (args.data_generation in ["dataset", "random"])
-                        and (((j + 1) % args.test_freq == 0) or (j + 1 == nbatches))
+                        # and (((j + 1) % args.test_freq == 0) or (j + 1 == nbatches))  # test freq based on batches
+                        and ((((k + 1) % args.test_freq == 0) or (k + 1 == args.nepochs)) and (j + 1 == nbatches))  # test freq based on epochs. test at the end of each epoch
                     )
 
                     # print time, loss and accuracy
