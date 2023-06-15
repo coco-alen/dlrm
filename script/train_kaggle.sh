@@ -13,8 +13,8 @@ CUDA_VISIBLE_DEVICES=1,2,3,4,5,6,7 python -u dlrm_s_pytorch.py \
     --arch-mlp-top="512-256-1" \
     --data-generation=dataset \
     --data-set=kaggle \
-    --raw-data-file=/nethome/hyou37/yipin/dataset/Criteo_Research/train.txt \
-    --processed-data-file=/nethome/hyou37/yipin/dataset/Criteo_Research/kaggleAdDisplayChallenge_processed.npz \
+    --raw-data-file=/data/hyou37/yipin/dataset/Criteo_Research/train.txt \
+    --processed-data-file=/data/hyou37/yipin/dataset/Criteo_Research/kaggleAdDisplayChallenge_train_processed.npz \
     --loss-function=bce \
     --round-targets=True \
     --learning-rate=0.1 \
@@ -28,7 +28,7 @@ CUDA_VISIBLE_DEVICES=1,2,3,4,5,6,7 python -u dlrm_s_pytorch.py \
     --print-time \
     --num-workers=64 \
     --test-num-workers=64 \
-    --save-model=/nethome/hyou37/yipin/program/dlrm/ckpt/test/MLP_bot-13-512-256-64-16_top-512-256-1.pth \
+    --save-model=/data/hyou37/yipin/program/dlrm/ckpt/test/MLP_bot-13-512-256-64-16_top-512-256-1.pth \
     --use-gpu  \
     --dataset-multiprocessing
 

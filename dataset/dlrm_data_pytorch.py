@@ -26,9 +26,9 @@ from collections import deque
 # others
 from os import path
 
-import data_loader_terabyte
+import dataset.data_loader_terabyte as data_loader_terabyte
+import dataset.data_utils as data_utils
 
-import data_utils
 import mlperf_logger
 
 # numpy
