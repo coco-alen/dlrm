@@ -359,9 +359,15 @@ def run():
         print("Using CPU...")
 
     ### prepare training data ###
-    ln_bot = np.fromstring(args.arch_mlp_bot, dtype=int, sep="-")
-    # input data
+    # define bottom block shape
+    if args.block_type == "mlp":
+        ln_bot = np.fromstring(args.arch_mlp_bot, dtype=int, sep="-")
+    elif args.block_type == "transformer":
+        ln_bot = np.fromstring(args.arch_transformer_bot, dtype=int, sep="-")
+    else:
+        sys.exit("ERROR: --block-type=" + args.block_type + " is not supported")
 
+    # get input data
     if args.mlperf_logging:
         mlperf_logger.barrier()
         mlperf_logger.log_end(key=mlperf_logger.constants.INIT_STOP)
@@ -426,8 +432,17 @@ def run():
             + args.arch_interaction_op
             + " is not supported"
         )
-    arch_mlp_top_adjusted = str(num_int) + "-" + args.arch_mlp_top
-    ln_top = np.fromstring(arch_mlp_top_adjusted, dtype=int, sep="-")
+
+    # define top block shape
+    if args.block_type == "mlp":
+        arch_mlp_top_adjusted = str(num_int) + "-" + args.arch_mlp_top
+        ln_top = np.fromstring(arch_mlp_top_adjusted, dtype=int, sep="-")
+    elif args.block_type == "transformer":
+        arch_trans_top_adjusted = str(num_int) + "-" + args.arch_transformer_top
+        ln_top = np.fromstring(arch_trans_top_adjusted, dtype=int, sep="-")
+    else:
+        sys.exit("ERROR: --block-type=" + args.block_type + " is not supported")
+
 
     # sanity check: feature sizes and mlp dimensions must match
     if m_den != ln_bot[0]:

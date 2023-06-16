@@ -37,12 +37,19 @@ def get_params():
         "--arch-embedding-size", type=dash_separated_ints, default="4-3-2"
     )
     # j will be replaced with the table number
+
+    # arch param
+    parser.add_argument("--block-type", type=str, default="mlp") # mlp or transformer
+        # mlp
     parser.add_argument("--arch-mlp-bot", type=dash_separated_ints, default="4-3-2")
     parser.add_argument("--arch-mlp-top", type=dash_separated_ints, default="4-2-1")
-    parser.add_argument(
-        "--arch-interaction-op", type=str, choices=["dot", "cat"], default="dot"
-    )
+        # transformer
+    parser.add_argument("--arch-transformer-bot", type=dash_separated_ints, default="4-3-2")
+    parser.add_argument("--arch-transformer-top", type=dash_separated_ints, default="4-2-1")
+        #else
+    parser.add_argument("--arch-interaction-op", type=str, choices=["dot", "cat"], default="dot")
     parser.add_argument("--arch-interaction-itself", action="store_true", default=False)
+
     parser.add_argument("--weighted-pooling", type=str, default=None)
     # embedding table options
     parser.add_argument("--md-flag", action="store_true", default=False)
@@ -143,6 +150,7 @@ def get_params():
     parser.add_argument("--lr-num-warmup-steps", type=int, default=0)
     parser.add_argument("--lr-decay-start-step", type=int, default=0)
     parser.add_argument("--lr-num-decay-steps", type=int, default=0)
+
 
     args = parser.parse_args()
     return args
