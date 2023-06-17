@@ -52,7 +52,7 @@ def create_transformer(ln, endActivation = nn.ReLU):
         n = ln[i]
         m = ln[i + 1]
 
-        if i == 0:
+        if i == 0 or i == ln.size - 2:
             LL = nn.Linear(int(n), int(m), bias=True)
             # initialize the weights
             mean = 0.0  # std_dev = np.sqrt(variance)
@@ -68,7 +68,7 @@ def create_transformer(ln, endActivation = nn.ReLU):
                 in_dim = n,
                 out_dim = m,
                 num_heads = 8,
-                ffn_expand_ratio=4.0,
+                ffn_expand_ratio=2.0,
                 qkv_bias=False,
                 qk_scale=None,
                 drop=0.0,
