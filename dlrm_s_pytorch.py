@@ -628,6 +628,7 @@ def run():
                 {
                     "params": [p for emb in dlrm.emb_l for p in emb.parameters()],
                     "lr": args.learning_rate,
+                    'weight_decay':0
                 },
                 # TODO check this lr setup
                 # bottom mlp has no data parallelism
@@ -635,14 +636,16 @@ def run():
                 {
                     "params": dlrm.bot_l.parameters(),
                     "lr": args.learning_rate,
+                    'weight_decay':1e-5
                 },
                 {
                     "params": dlrm.top_l.parameters(),
                     "lr": args.learning_rate,
+                    'weight_decay':1e-5
                 },
             ]
         )
-        optimizer = opts[args.optimizer](parameters, lr=args.learning_rate)
+        optimizer = opts[args.optimizer](parameters, lr=args.learning_rate, momentum=0.9)
         lr_scheduler = LRPolicyScheduler(
             optimizer,
             args.lr_num_warmup_steps,
@@ -692,6 +695,7 @@ def run():
             # when targeting inference on CPU
             ld_model = torch.load(args.load_model, map_location=torch.device("cpu"))
         dlrm.load_state_dict(ld_model["state_dict"])
+        dlrm = dlrm.to(device)
         ld_j = ld_model["iter"]
         ld_k = ld_model["epoch"]
         ld_nepochs = ld_model["nepochs"]
@@ -703,11 +707,13 @@ def run():
             ld_gAUC_test = ld_model["test_auc"]
         ld_acc_test = ld_model["test_acc"]
         if not args.inference_only:
-            optimizer.load_state_dict(ld_model["opt_state_dict"])
+            # optimizer.load_state_dict(ld_model["opt_state_dict"])
             best_acc_test = ld_acc_test
             total_loss = ld_total_loss
-            skip_upto_epoch = ld_k  # epochs
-            skip_upto_batch = ld_j  # batches
+
+            ## NOTE: train from start, don't skip
+            # skip_upto_epoch = ld_k  # epochs
+            # skip_upto_batch = ld_j  # batches
         else:
             args.print_freq = ld_nbatches
             args.test_freq = 0
@@ -809,6 +815,7 @@ def run():
                     )
 
                 if k < skip_upto_epoch:
+                    k = skip_upto_epoch
                     continue
 
                 if args.mlperf_logging:
