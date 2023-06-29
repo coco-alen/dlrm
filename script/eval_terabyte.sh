@@ -9,10 +9,10 @@ botShape="13-512-256-64-16"
 topShape="512-256-128-1"
 
 sparseFeatureSize=${botShape##*-}
-saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/kaggle/vanilla_transformer"
+saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/vanilla_transformer"
 
 CUDA_VISIBLE_DEVICES=0 python -u dlrm_s_pytorch.py \
-    --arch-sparse-feature-size=${sparseFeatureSize}\
+    --arch-sparse-feature-size=${sparseFeatureSize} \
     --block-type=${blockType} \
     --arch-mlp-bot=${botShape} \
     --arch-mlp-top=${topShape} \

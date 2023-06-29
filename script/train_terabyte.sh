@@ -6,20 +6,27 @@ nbatches=2399
 lrNumWarmupSteps=$((30*nbatches))
 lrDecayStartStep=$((150*nbatches))
 lrNumDecaySteps=$((50*nbatches))
-# blockType="mlp"
-blockType="transformer"
-botShape="13-512-256-64-16"
+
+blockType="mlp"
+botShape="13-512-256-64"
+topShape="512-512-256-1"
+
+# blockType="transformer"
 # topShape="512-256-1"
 # botShape="13-512-128-16"
-topShape="512-256-128-1"
 
 sparseFeatureSize=${botShape##*-}
-saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/kaggle/vanilla_transformer"
+saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/mlp"
 
-gpuUsed="2,3"
-timeNow=$(date +%Y-%m-%d_%H:%M:%S_gpu${gpuUsed})
+# ========= device & log ========= #
+if [[ $# == 1 ]]; then
+    gpuUsed=$1
+else
+    gpuUsed="0"
+fi
+timeNow=$(date +%Y-%m-%d_%H:%M_gpu${gpuUsed})
 
-# CUDA_VISIBLE_DEVICES=2,3 python -u -m torch.distributed.launch --nproc_per_node=8 dlrm_s_pytorch.py \
+# CUDA_VISIBLE_DEVICES=4,5,6,7 python -u -m torch.distributed.launch --nproc_per_node=4 dlrm_s_pytorch.py \
 CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --arch-sparse-feature-size=${sparseFeatureSize} \
     --block-type=${blockType} \
@@ -28,13 +35,14 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --arch-transformer-bot=${botShape} \
     --arch-transformer-top=${topShape} \
     --data-generation=dataset \
-    --data-set=kaggle \
-    --raw-data-file=/data/hyou37/yipin/dataset/Criteo_Research/train.txt \
-    --processed-data-file=/data/hyou37/yipin/dataset/Criteo_Research/kaggleAdDisplayChallenge_train_processed.npz \
-    --loss-function='wbce' \
+    --data-set=terabyte \
+    --raw-data-file=/data/hyou37/yipin/dataset/Criteo_Terabyte/day \
+    --loss-function='bce' \
     --round-targets=True \
     --optimizer='sgd' \
-    --learning-rate=0.00001 \
+    --learning-rate=0.02 \
+    --weight-decay=0.0 \
+    --momentum=0.0 \
     --mini-batch-size=4096 \
     --nepochs=250 \
     --test-freq=1 \
@@ -42,16 +50,16 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --print-time \
     --num-workers=64 \
     --test-num-workers=64 \
-    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_moe_4expert.pth \
+    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}.pth \
     --use-gpu  \
     --dataset-multiprocessing \
-    --moe \
+    --moe  \
     2>&1 | tee ${saveModelDir}/${timeNow}.log
 
     # --lr-num-warmup-steps=${lrNumWarmupSteps} \
     # --lr-decay-start-step=${lrDecayStartStep} \
     # --lr-num-decay-steps=${lrNumDecaySteps} \
-
+    # --processed-data-file=/data/hyou37/yipin/dataset/Criteo_Research/kaggleAdDisplayChallenge_train_processed.npz \
 echo "done"
 
 # nohup ./script/train_kaggle.sh > ./ckpt/vanilla_transformer/06-17_18-29.log 2>&1 &

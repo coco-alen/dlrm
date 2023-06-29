@@ -636,19 +636,19 @@ def run():
                 {
                     "params": dlrm.bot_l.parameters(),
                     "lr": args.learning_rate,
-                    'weight_decay':1e-5
+                    'weight_decay':args.weight_decay
                 },
                 {
                     "params": dlrm.top_l.parameters(),
                     "lr": args.learning_rate,
-                    'weight_decay':1e-5
+                    'weight_decay':args.weight_decay
                 },
             ]
         )
         if args.optimizer == "adamw":
             optimizer = opts[args.optimizer](parameters, lr=args.learning_rate)
         else:
-            optimizer = opts[args.optimizer](parameters, lr=args.learning_rate, momentum=0.9)
+            optimizer = opts[args.optimizer](parameters, lr=args.learning_rate, momentum=args.momentum)
         lr_scheduler = LRPolicyScheduler(
             optimizer,
             args.lr_num_warmup_steps,

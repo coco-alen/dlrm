@@ -98,6 +98,9 @@ def get_params():
     parser.add_argument("--mini-batch-size", type=int, default=1)
     parser.add_argument("--nepochs", type=int, default=1)
     parser.add_argument("--learning-rate", type=float, default=0.01)
+    parser.add_argument("--weight-decay", type=float, default=1e-5)
+    parser.add_argument("--momentum", type=float, default=0.9)
+
     parser.add_argument("--print-precision", type=int, default=5)
     parser.add_argument("--numpy-rand-seed", type=int, default=123)
     parser.add_argument("--sync-dense-params", type=bool, default=True)
