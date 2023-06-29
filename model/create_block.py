@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from model.transformer import TransformerBlock
+from model.moe import MOE
 
 def create_mlp(ln, sigmoid_layer):
     # build MLP layer by layer
@@ -84,4 +85,13 @@ def create_transformer(ln, endActivation = nn.ReLU):
     # approach 1: use ModuleList
     # return layers
     # approach 2: use Sequential container to wrap all layers
+    return torch.nn.Sequential(*layers)
+
+
+def create_moe(ln, sigmoid_layer):
+    layers = nn.ModuleList()
+    layers.append(MOE(ln = ln,
+                      num_expert=4,
+                      top_k=1,
+                      sigmoid_layer = sigmoid_layer))
     return torch.nn.Sequential(*layers)

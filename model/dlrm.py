@@ -18,7 +18,7 @@ from model.md_embedding_bag import PrEmbeddingBag
 
 # quotient-remainder trick
 from model.qr_embedding_bag import QREmbeddingBag
-from model.create_block import create_mlp, create_transformer
+from model.create_block import create_mlp, create_transformer,create_moe
 from params import args
 
 ### define dlrm in PyTorch ###
@@ -154,12 +154,14 @@ class DLRM_Net(nn.Module):
                     self.v_W_l = w_list
 
             if args.block_type == "mlp":
-                self.bot_l = create_mlp(ln_bot, sigmoid_bot)
                 self.top_l = create_mlp(ln_top, sigmoid_top)
             elif args.block_type == "transformer":
-                # self.bot_l = create_transformer(ln_bot,nn.GELU)
-                self.bot_l = create_mlp(ln_bot, sigmoid_bot)
                 self.top_l = create_transformer(ln_top,nn.Sigmoid)
+            
+            if args.moe:
+                self.bot_l = create_moe(ln_bot, sigmoid_bot)
+            else:
+                self.bot_l = create_mlp(ln_bot, sigmoid_bot)
 
             # quantization
             self.quantize_emb = False

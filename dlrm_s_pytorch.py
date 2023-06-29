@@ -645,7 +645,10 @@ def run():
                 },
             ]
         )
-        optimizer = opts[args.optimizer](parameters, lr=args.learning_rate, momentum=0.9)
+        if args.optimizer == "adamw":
+            optimizer = opts[args.optimizer](parameters, lr=args.learning_rate)
+        else:
+            optimizer = opts[args.optimizer](parameters, lr=args.learning_rate, momentum=0.9)
         lr_scheduler = LRPolicyScheduler(
             optimizer,
             args.lr_num_warmup_steps,

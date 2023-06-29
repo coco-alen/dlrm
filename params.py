@@ -40,6 +40,7 @@ def get_params():
 
     # arch param
     parser.add_argument("--block-type", type=str, default="mlp") # mlp or transformer
+    parser.add_argument("--moe", action="store_true", default=False)
         # mlp
     parser.add_argument("--arch-mlp-bot", type=dash_separated_ints, default="4-3-2")
     parser.add_argument("--arch-mlp-top", type=dash_separated_ints, default="4-2-1")
