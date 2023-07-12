@@ -37,6 +37,7 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --data-generation=dataset \
     --data-set=terabyte \
     --raw-data-file=/data/hyou37/yipin/dataset/Criteo_Terabyte/day \
+    --processed-data-file=/data/hyou37/yipin/dataset/Criteo_Terabyte/.npz \
     --loss-function='bce' \
     --round-targets=True \
     --optimizer='sgd' \
@@ -48,13 +49,17 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --test-freq=1 \
     --print-freq=512 \
     --print-time \
-    --num-workers=64 \
-    --test-num-workers=64 \
+    --test-mini-batch-size=16384 \
+    --max-ind-range=10000000 \
     --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}.pth \
-    --use-gpu  \
-    --dataset-multiprocessing \
-    --moe  \
-    2>&1 | tee ${saveModelDir}/${timeNow}.log
+    --use-gpu \
+    --dataset-multiprocessing
+
+
+    # --num-workers=64 \
+    # --test-num-workers=64 \
+    # --dataset-multiprocessing  #  The Terabyte dataset can be multiprocessed in an environment with more than 24 CPU cores and at least 1 TB of memory
+    # 2>&1 | tee ${saveModelDir}/${timeNow}.log
 
     # --lr-num-warmup-steps=${lrNumWarmupSteps} \
     # --lr-decay-start-step=${lrDecayStartStep} \
@@ -62,4 +67,4 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     # --processed-data-file=/data/hyou37/yipin/dataset/Criteo_Research/kaggleAdDisplayChallenge_train_processed.npz \
 echo "done"
 
-# nohup ./script/train_kaggle.sh > ./ckpt/vanilla_transformer/06-17_18-29.log 2>&1 &
+# nohup ./script/train_terabyte.sh 0,1,2,3,4,5,6,7 > ./ckpt/terabyte/mlp/07-09.log 2>&1 &

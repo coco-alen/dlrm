@@ -1106,26 +1106,53 @@ def getCriteoAdData(
         if dataset_multiprocessing:
             resultDay = Manager().dict()
             convertDictsDay = Manager().dict()
-            processes = [
-                Process(
-                    target=process_one_file,
-                    name="process_one_file:%i" % i,
-                    args=(
-                        npzfile + "_{0}".format(i),
-                        npzfile,
-                        i,
-                        total_per_file[i],
-                        dataset_multiprocessing,
-                        convertDictsDay,
-                        resultDay,
-                    ),
-                )
-                for i in range(0, days)
-            ]
-            for process in processes:
-                process.start()
-            for process in processes:
-                process.join()
+            if criteo_kaggle:
+                processes = [
+                    Process(
+                        target=process_one_file,
+                        name="process_one_file:%i" % i,
+                        args=(
+                            npzfile + "_{0}".format(i),
+                            npzfile,
+                            i,
+                            total_per_file[i],
+                            dataset_multiprocessing,
+                            convertDictsDay,
+                            resultDay,
+                        ),
+                    )
+                    for i in range(0, days)
+                ]
+                for process in processes:
+                    process.start()
+                for process in processes:
+                    process.join()
+            else: # memory have only 252GB, so spilt the process into 6 steps to avoid memory error
+                step = 4
+                for processStep in range(0,days,step):
+                    limit = processStep+step if processStep+step < days else days
+                    processes = [
+                        Process(
+                            target=process_one_file,
+                            name="process_one_file:%i" % i,
+                            args=(
+                                npzfile + "_{0}".format(i),
+                                npzfile,
+                                i,
+                                total_per_file[i],
+                                dataset_multiprocessing,
+                                convertDictsDay,
+                                resultDay,
+                            ),
+                        )
+                        for i in range(processStep,limit)
+                    ]
+                    for process in processes:
+                        process.start()
+                    for process in processes:
+                        process.join()
+
+
             for day in range(days):
                 total_per_file[day] = resultDay[day]
                 print("Constructing convertDicts Split: {}".format(day))
@@ -1180,25 +1207,49 @@ def getCriteoAdData(
 
     # process all splits
     if dataset_multiprocessing:
-        processes = [
-            Process(
-                target=processCriteoAdData,
-                name="processCriteoAdData:%i" % i,
-                args=(
-                    d_path,
-                    d_file,
-                    npzfile,
-                    i,
-                    convertDicts,
-                    counts,
-                ),
-            )
-            for i in range(0, days)
-        ]
-        for process in processes:
-            process.start()
-        for process in processes:
-            process.join()
+        if criteo_kaggle:
+            processes = [
+                Process(
+                    target=processCriteoAdData,
+                    name="processCriteoAdData:%i" % i,
+                    args=(
+                        d_path,
+                        d_file,
+                        npzfile,
+                        i,
+                        convertDicts,
+                        counts,
+                    ),
+                )
+                for i in range(0, days)
+            ]
+            for process in processes:
+                process.start()
+            for process in processes:
+                process.join()
+        else:  # memory have only 252GB, so spilt the process into 6 steps to avoid memory error
+            step = 4
+            for processStep in range(0,days,step):
+                limit = processStep+step if processStep+step < days else days
+                processes = [
+                    Process(
+                        target=processCriteoAdData,
+                        name="processCriteoAdData:%i" % i,
+                        args=(
+                            d_path,
+                            d_file,
+                            npzfile,
+                            i,
+                            convertDicts,
+                            counts,
+                        ),
+                    )
+                    for i in range(processStep,limit)
+                ]
+                for process in processes:
+                    process.start()
+                for process in processes:
+                    process.join()
 
     else:
         for i in range(days):
