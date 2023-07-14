@@ -53,8 +53,7 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --max-ind-range=10000000 \
     --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}.pth \
     --use-gpu \
-    --dataset-multiprocessing
-
+    --memory-map 
 
     # --num-workers=64 \
     # --test-num-workers=64 \

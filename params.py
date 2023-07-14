@@ -155,6 +155,7 @@ def get_params():
     parser.add_argument("--lr-decay-start-step", type=int, default=0)
     parser.add_argument("--lr-num-decay-steps", type=int, default=0)
 
+    parser.add_argument("--one-hot", action="store_true", default=False) # last layer of top mlp should be size 2
 
     args = parser.parse_args()
     return args

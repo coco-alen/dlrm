@@ -1,6 +1,7 @@
-step = 4
-for processStep in range(0,24,step):
-    limit = processStep+step if processStep+step < 24 else 24
-    for i in range(processStep,limit):
-        print(i)
-    print('---')
+import torch
+
+a = torch.randn(2048, 2)
+if a.shape[-1] == 2:
+    a = torch.argmax(a, dim=-1).unsqueeze(-1)
+    print(a)
+    print(a.shape)

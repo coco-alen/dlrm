@@ -185,6 +185,10 @@ def inference(
             device,
             ndevices=ndevices,
         )
+
+        if args.one_hot:
+            Z_test = torch.argmax(Z_test, dim=-1).unsqueeze(-1)
+
         ### gather the distributed results on each rank ###
         # For some reason it requires explicit sync before all_gather call if
         # tensor is on GPU memory
@@ -366,6 +370,7 @@ def run():
         ln_bot = np.fromstring(args.arch_transformer_bot, dtype=int, sep="-")
     else:
         sys.exit("ERROR: --block-type=" + args.block_type + " is not supported")
+    
 
     # get input data
     if args.mlperf_logging:
@@ -443,6 +448,10 @@ def run():
     else:
         sys.exit("ERROR: --block-type=" + args.block_type + " is not supported")
 
+    if args.one_hot:
+        ln_top[-1] = 2
+    else:
+        ln_top[-1] = 1
 
     # sanity check: feature sizes and mlp dimensions must match
     if m_den != ln_bot[0]:
@@ -872,6 +881,8 @@ def run():
                         W = W[ext_dist.get_my_slice(mbs)]
 
                     # loss
+                    if args.one_hot:
+                        T = torch.nn.functional.one_hot(T.to(torch.int64), 2).squeeze(1).float()
                     E = loss_fn_wrap(Z, T, use_gpu, device)
 
                     # compute loss and accuracy

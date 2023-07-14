@@ -6,15 +6,17 @@ nbatches=2399
 lrNumWarmupSteps=$((30*nbatches))
 lrDecayStartStep=$((150*nbatches))
 lrNumDecaySteps=$((50*nbatches))
-# blockType="mlp"
-blockType="transformer"
+
+blockType="mlp"
 botShape="13-512-256-64-16"
-# topShape="512-256-1"
-# botShape="13-512-128-16"
-topShape="512-256-128-1"
+topShape="512-256-1"
+
+# blockType="transformer"
+# botShape="13-512-256-64-16"
+# topShape="512-256-128-1"
 
 sparseFeatureSize=${botShape##*-}
-saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/kaggle/vanilla_transformer"
+saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/kaggle/mlp"
 
 gpuUsed="2,3"
 timeNow=$(date +%Y-%m-%d_%H:%M:%S_gpu${gpuUsed})
@@ -31,10 +33,10 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --data-set=kaggle \
     --raw-data-file=/data/hyou37/yipin/dataset/Criteo_Research/train.txt \
     --processed-data-file=/data/hyou37/yipin/dataset/Criteo_Research/kaggleAdDisplayChallenge_train_processed.npz \
-    --loss-function='wbce' \
+    --loss-function='bce' \
     --round-targets=True \
     --optimizer='sgd' \
-    --learning-rate=0.00001 \
+    --learning-rate=0.0001 \
     --mini-batch-size=4096 \
     --nepochs=250 \
     --test-freq=1 \
@@ -42,11 +44,15 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --print-time \
     --num-workers=64 \
     --test-num-workers=64 \
-    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_moe_4expert.pth \
+    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_onehot.pth \
     --use-gpu  \
     --dataset-multiprocessing \
-    --moe \
+    --one-hot \
     2>&1 | tee ${saveModelDir}/${timeNow}.log
+    # --moe \
+
+    
+    # 2>&1 | tee ${saveModelDir}/${timeNow}.log
 
     # --lr-num-warmup-steps=${lrNumWarmupSteps} \
     # --lr-decay-start-step=${lrDecayStartStep} \

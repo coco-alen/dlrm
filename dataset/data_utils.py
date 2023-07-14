@@ -1128,7 +1128,7 @@ def getCriteoAdData(
                 for process in processes:
                     process.join()
             else: # memory have only 252GB, so spilt the process into 6 steps to avoid memory error
-                step = 4
+                step = 6
                 for processStep in range(0,days,step):
                     limit = processStep+step if processStep+step < days else days
                     processes = [
@@ -1228,7 +1228,7 @@ def getCriteoAdData(
             for process in processes:
                 process.join()
         else:  # memory have only 252GB, so spilt the process into 6 steps to avoid memory error
-            step = 4
+            step = 6
             for processStep in range(0,days,step):
                 limit = processStep+step if processStep+step < days else days
                 processes = [

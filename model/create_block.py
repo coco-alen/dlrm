@@ -91,7 +91,7 @@ def create_transformer(ln, endActivation = nn.ReLU):
 def create_moe(ln, sigmoid_layer):
     layers = nn.ModuleList()
     layers.append(MOE(ln = ln,
-                      num_expert=4,
+                      num_expert=2,
                       top_k=1,
                       sigmoid_layer = sigmoid_layer))
     return torch.nn.Sequential(*layers)
