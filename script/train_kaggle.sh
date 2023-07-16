@@ -7,18 +7,18 @@ lrNumWarmupSteps=$((30*nbatches))
 lrDecayStartStep=$((150*nbatches))
 lrNumDecaySteps=$((50*nbatches))
 
-blockType="mlp"
-botShape="13-512-256-64-16"
-topShape="512-256-1"
-
-# blockType="transformer"
+# blockType="mlp"
 # botShape="13-512-256-64-16"
-# topShape="512-256-128-1"
+# topShape="512-256-1"
+
+blockType="transformer"
+botShape="13-512-256-64-16"
+topShape="512-256-128-1"
 
 sparseFeatureSize=${botShape##*-}
-saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/kaggle/mlp"
+saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/kaggle/vanilla_transformer"
 
-gpuUsed="2,3"
+gpuUsed="4,5"
 timeNow=$(date +%Y-%m-%d_%H:%M:%S_gpu${gpuUsed})
 
 # CUDA_VISIBLE_DEVICES=2,3 python -u -m torch.distributed.launch --nproc_per_node=8 dlrm_s_pytorch.py \
@@ -44,10 +44,11 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --print-time \
     --num-workers=64 \
     --test-num-workers=64 \
-    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_onehot.pth \
+    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_onehot_lableSmooth.pth \
     --use-gpu  \
     --dataset-multiprocessing \
     --one-hot \
+    --label-smoothing=0.2 \
     2>&1 | tee ${saveModelDir}/${timeNow}.log
     # --moe \
 

@@ -883,6 +883,10 @@ def run():
                     # loss
                     if args.one_hot:
                         T = torch.nn.functional.one_hot(T.to(torch.int64), 2).squeeze(1).float()
+                    
+                    # label smoothing
+                    T = T * (1 - args.label_smoothing) +  args.label_smoothing / T.shape[-1]
+
                     E = loss_fn_wrap(Z, T, use_gpu, device)
 
                     # compute loss and accuracy

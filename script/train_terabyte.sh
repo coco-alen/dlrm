@@ -41,19 +41,19 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --loss-function='bce' \
     --round-targets=True \
     --optimizer='sgd' \
-    --learning-rate=0.02 \
+    --learning-rate=0.1 \
     --weight-decay=0.0 \
     --momentum=0.0 \
-    --mini-batch-size=4096 \
-    --nepochs=250 \
+    --mini-batch-size=2048 \
+    --nepochs=1 \
     --test-freq=1 \
     --print-freq=512 \
     --print-time \
     --test-mini-batch-size=16384 \
     --max-ind-range=10000000 \
-    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}.pth \
+    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_baseline.pth \
     --use-gpu \
-    --memory-map 
+    --memory-map 2>&1 | tee ${saveModelDir}/${timeNow}.log
 
     # --num-workers=64 \
     # --test-num-workers=64 \

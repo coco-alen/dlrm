@@ -156,6 +156,7 @@ def get_params():
     parser.add_argument("--lr-num-decay-steps", type=int, default=0)
 
     parser.add_argument("--one-hot", action="store_true", default=False) # last layer of top mlp should be size 2
+    parser.add_argument("--label-smoothing", type=float, default=0.0) # hard label smoothing, target = (1 - label_smoothing) * target + label_smoothing / num_classes
 
     args = parser.parse_args()
     return args
