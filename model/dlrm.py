@@ -52,7 +52,7 @@ class DLRM_Net(nn.Module):
                 ).astype(np.float32)
                 EE.embs.weight.data = torch.tensor(W, requires_grad=True)
             else:
-                EE = nn.EmbeddingBag(n, m, mode="sum", sparse=False)
+                EE = nn.EmbeddingBag(n, m, mode="sum", sparse=True)
                 # initialize embeddings
                 # nn.init.uniform_(EE.weight, a=-np.sqrt(1 / n), b=np.sqrt(1 / n))
                 W = np.random.uniform(
@@ -158,8 +158,8 @@ class DLRM_Net(nn.Module):
             elif args.block_type == "transformer":
                 self.top_l = create_transformer(ln_top,nn.Sigmoid)
             
-            if args.moe:
-                self.bot_l = create_moe(ln_bot, sigmoid_bot)
+            if args.moe is not None:
+                self.bot_l = create_moe(ln_bot, sigmoid_bot, num_expert=args.moe)
             else:
                 self.bot_l = create_mlp(ln_bot, sigmoid_bot)
 

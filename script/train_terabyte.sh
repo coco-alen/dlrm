@@ -7,16 +7,19 @@ lrNumWarmupSteps=$((30*nbatches))
 lrDecayStartStep=$((150*nbatches))
 lrNumDecaySteps=$((50*nbatches))
 
-blockType="mlp"
-botShape="13-512-256-64"
-topShape="512-512-256-1"
+# blockType="mlp"
+# botShape="13-512-256-64"
+# topShape="512-512-256-1"
 
-# blockType="transformer"
-# topShape="512-256-1"
-# botShape="13-512-128-16"
+blockType="transformer"
+# topShape="512-512-256-64-1"
+# botShape="13-512-256-64"
+topShape="256-256-64-1"
+botShape="13-256-32"
+
 
 sparseFeatureSize=${botShape##*-}
-saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/mlp"
+saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/vanilla_transformer"
 
 # ========= device & log ========= #
 if [[ $# == 1 ]]; then
@@ -34,6 +37,7 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --arch-mlp-top=${topShape} \
     --arch-transformer-bot=${botShape} \
     --arch-transformer-top=${topShape} \
+    --qr-flag \
     --data-generation=dataset \
     --data-set=terabyte \
     --raw-data-file=/data/hyou37/yipin/dataset/Criteo_Terabyte/day \
@@ -41,19 +45,20 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --loss-function='bce' \
     --round-targets=True \
     --optimizer='sgd' \
-    --learning-rate=0.1 \
-    --weight-decay=0.0 \
+    --learning-rate=0.0001 \
+    --weight-decay=0.00001 \
     --momentum=0.0 \
-    --mini-batch-size=2048 \
-    --nepochs=1 \
+    --mini-batch-size=8192 \
+    --nepochs=3 \
     --test-freq=1 \
     --print-freq=512 \
     --print-time \
     --test-mini-batch-size=16384 \
     --max-ind-range=10000000 \
-    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_baseline.pth \
+    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_qrEmbedding.pth \
     --use-gpu \
-    --memory-map 2>&1 | tee ${saveModelDir}/${timeNow}.log
+    --moe 2\
+    --memory-map  2>&1 | tee ${saveModelDir}/${timeNow}.log
 
     # --num-workers=64 \
     # --test-num-workers=64 \

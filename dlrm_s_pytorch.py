@@ -381,7 +381,7 @@ def run():
         mlperf_logger.barrier()
 
     if args.data_generation == "dataset":
-        train_data, train_ld, test_data, test_ld = dp.make_criteo_data_and_loaders(args)
+        train_data, train_ld, test_data, test_ld, val_data, val_ld = dp.make_criteo_data_and_loaders(args)
         table_feature_map = {idx: idx for idx in range(len(train_data.counts))}
         nbatches = args.num_batches if args.num_batches > 0 else len(train_ld)
         nbatches_test = len(test_ld)
@@ -399,6 +399,7 @@ def run():
             )
         else:
             ln_emb = np.array(ln_emb)
+        print("embedding table size: ", ln_emb)
         m_den = train_data.m_den
         ln_bot[0] = m_den
     else:
@@ -587,7 +588,6 @@ def run():
         weighted_pooling=args.weighted_pooling,
         loss_function=args.loss_function,
     )
-    print(dlrm)
     # test prints
     if args.debug_mode:
         print("initial parameters (weights and bias):")
@@ -618,7 +618,8 @@ def run():
         else:
             dlrm.bot_l = ext_dist.DDP(dlrm.bot_l)
             dlrm.top_l = ext_dist.DDP(dlrm.top_l)
-
+    print(dlrm)
+    
     if not args.inference_only:
         if use_gpu and args.optimizer in ["rwsadagrad", "adagrad"]:
             sys.exit("GPU version of Adagrad is not supported by PyTorch.")
@@ -987,6 +988,20 @@ def run():
                         # don't measure training iter time in a test iteration
                         if args.mlperf_logging:
                             previous_iteration_time = None
+                        print(
+                            "Validating at - {}/{} of epoch {},".format(j + 1, nbatches, k)
+                        )
+                        inference(
+                            args,
+                            dlrm,
+                            best_acc_test,
+                            best_auc_test,
+                            val_ld,
+                            device,
+                            use_gpu,
+                            log_iter,
+                        )
+
                         print(
                             "Testing at - {}/{} of epoch {},".format(j + 1, nbatches, k)
                         )

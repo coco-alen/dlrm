@@ -69,7 +69,7 @@ def create_transformer(ln, endActivation = nn.ReLU):
                 in_dim = n,
                 out_dim = m,
                 num_heads = 8,
-                ffn_expand_ratio=2.0,
+                ffn_expand_ratio=1.0,
                 qkv_bias=False,
                 qk_scale=None,
                 drop=0.0,
@@ -88,10 +88,10 @@ def create_transformer(ln, endActivation = nn.ReLU):
     return torch.nn.Sequential(*layers)
 
 
-def create_moe(ln, sigmoid_layer):
+def create_moe(ln, sigmoid_layer, num_expert=2):
     layers = nn.ModuleList()
     layers.append(MOE(ln = ln,
-                      num_expert=2,
+                      num_expert=num_expert,
                       top_k=1,
                       sigmoid_layer = sigmoid_layer))
     return torch.nn.Sequential(*layers)
