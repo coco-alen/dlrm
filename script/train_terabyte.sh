@@ -14,8 +14,8 @@ lrNumDecaySteps=$((50*nbatches))
 blockType="transformer"
 # topShape="512-512-256-64-1"
 # botShape="13-512-256-64"
-topShape="256-256-64-1"
-botShape="13-256-32"
+topShape="64-64-16-1"
+botShape="13-64-8"
 
 
 sparseFeatureSize=${botShape##*-}
@@ -55,9 +55,8 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --print-time \
     --test-mini-batch-size=16384 \
     --max-ind-range=10000000 \
-    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_qrEmbedding.pth \
+    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_smallerSize.pth \
     --use-gpu \
-    --moe 2\
     --memory-map  2>&1 | tee ${saveModelDir}/${timeNow}.log
 
     # --num-workers=64 \

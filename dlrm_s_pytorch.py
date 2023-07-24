@@ -60,6 +60,7 @@ import sys
 import time
 
 from params import args
+from utils import throughput
 from model.dlrm import DLRM_Net
 # onnx
 # The onnx import causes deprecation warnings every time workers
@@ -1107,6 +1108,9 @@ def run():
                 device,
                 use_gpu,
             )
+
+            if args.throughput:
+                throughput(args, dlrm, test_ld, use_gpu, device, ndevices, repeat=100)
 
     # profiling
     if args.enable_profiling:
