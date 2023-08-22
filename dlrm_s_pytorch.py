@@ -57,7 +57,9 @@ import builtins
 import datetime
 import json
 import sys
+import os
 import time
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:32"
 
 from params import args
 from utils import throughput
@@ -433,6 +435,8 @@ def run():
             num_int = (num_fea * (num_fea - 1)) // 2 + m_den_out
     elif args.arch_interaction_op == "cat":
         num_int = num_fea * m_den_out
+    elif args.arch_interaction_op == "transformer":
+        num_int = num_fea * m_den_out
     else:
         sys.exit(
             "ERROR: --arch-interaction-op="
@@ -616,9 +620,13 @@ def run():
             device_ids = [ext_dist.my_local_rank]
             dlrm.bot_l = ext_dist.DDP(dlrm.bot_l, device_ids=device_ids)
             dlrm.top_l = ext_dist.DDP(dlrm.top_l, device_ids=device_ids)
+            if args.arch_interaction_op == "transformer":
+                dlrm.interaction = ext_dist.DDP(dlrm.interaction, device_ids=device_ids)
         else:
             dlrm.bot_l = ext_dist.DDP(dlrm.bot_l)
             dlrm.top_l = ext_dist.DDP(dlrm.top_l)
+            if args.arch_interaction_op == "transformer":
+                dlrm.interaction = ext_dist.DDP(dlrm.interaction)
     print(dlrm)
     
     if not args.inference_only:
@@ -702,7 +710,7 @@ def run():
                 # note that the call to .to(device) has already happened
                 ld_model = torch.load(
                     args.load_model,
-                    map_location=torch.device("cuda")
+                    map_location=torch.device("cuda"),
                     # map_location=lambda storage, loc: storage.cuda(0)
                 )
         else:
@@ -939,8 +947,8 @@ def run():
                     should_test = (
                         (args.test_freq > 0)
                         and (args.data_generation in ["dataset", "random"])
-                        # and (((j + 1) % args.test_freq == 0) or (j + 1 == nbatches))  # test freq based on batches
-                        and ((((k + 1) % args.test_freq == 0) or (k + 1 == args.nepochs)) and (j + 1 == nbatches))  # test freq based on epochs. test at the end of each epoch
+                        and (((j + 1) % args.test_freq == 0) or (j + 1 == nbatches))  # test freq based on batches
+                        # and ((((k + 1) % args.test_freq == 0) or (k + 1 == args.nepochs)) and (j + 1 == nbatches))  # test freq based on epochs. test at the end of each epoch
                     )
 
                     # print time, loss and accuracy
@@ -1099,6 +1107,7 @@ def run():
                 )
         else:
             print("Testing for inference only")
+            print(torch.cuda.memory_summary())
             inference(
                 args,
                 dlrm,

@@ -7,18 +7,18 @@ lrNumWarmupSteps=$((30*nbatches))
 lrDecayStartStep=$((150*nbatches))
 lrNumDecaySteps=$((50*nbatches))
 
-# blockType="mlp"
-# botShape="13-512-256-64-16"
-# topShape="512-256-1"
-
-blockType="transformer"
+blockType="mlp"
 botShape="13-512-256-64-16"
-topShape="512-256-128-1"
+topShape="512-256-1"
+
+# blockType="transformer"
+# botShape="13-512-256-64-16"
+# topShape="512-256-128-1"
 
 sparseFeatureSize=${botShape##*-}
 saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/kaggle/vanilla_transformer"
 
-gpuUsed="4,5"
+gpuUsed="6,7"
 timeNow=$(date +%Y-%m-%d_%H:%M:%S_gpu${gpuUsed})
 
 # CUDA_VISIBLE_DEVICES=2,3 python -u -m torch.distributed.launch --nproc_per_node=8 dlrm_s_pytorch.py \
@@ -29,6 +29,7 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --arch-mlp-top=${topShape} \
     --arch-transformer-bot=${botShape} \
     --arch-transformer-top=${topShape} \
+    --arch-interaction-op transformer \
     --data-generation=dataset \
     --data-set=kaggle \
     --raw-data-file=/data/hyou37/yipin/dataset/Criteo_Research/train.txt \
@@ -39,7 +40,7 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --learning-rate=0.0001 \
     --mini-batch-size=4096 \
     --nepochs=250 \
-    --test-freq=1 \
+    --test-freq=5120 \
     --print-freq=512 \
     --print-time \
     --num-workers=64 \
@@ -49,7 +50,7 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --dataset-multiprocessing \
     --one-hot \
     --label-smoothing=0.2 \
-    2>&1 | tee ${saveModelDir}/${timeNow}.log
+    # 2>&1 | tee ${saveModelDir}/${timeNow}.log
     # --moe \
 
     

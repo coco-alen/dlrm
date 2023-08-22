@@ -39,7 +39,8 @@ def get_params():
     # j will be replaced with the table number
 
     # arch param
-    parser.add_argument("--block-type", type=str, default="mlp") # mlp or transformer
+    parser.add_argument("--block-type", type=str, default="mlp",choices=["mlp","transformer"]) # mlp or transformer
+    parser.add_argument("--attention", type=str, default="msa",choices=["msa","castling"])
     parser.add_argument("--moe", type=int, default=None) # number of experts
         # mlp
     parser.add_argument("--arch-mlp-bot", type=dash_separated_ints, default="4-3-2")
@@ -48,7 +49,7 @@ def get_params():
     parser.add_argument("--arch-transformer-bot", type=dash_separated_ints, default="4-3-2")
     parser.add_argument("--arch-transformer-top", type=dash_separated_ints, default="4-2-1")
         #else
-    parser.add_argument("--arch-interaction-op", type=str, choices=["dot", "cat"], default="dot")
+    parser.add_argument("--arch-interaction-op", type=str, choices=["dot", "cat","transformer"], default="dot")
     parser.add_argument("--arch-interaction-itself", action="store_true", default=False)
 
     parser.add_argument("--weighted-pooling", type=str, default=None)
@@ -99,7 +100,7 @@ def get_params():
     parser.add_argument("--nepochs", type=int, default=1)
     parser.add_argument("--learning-rate", type=float, default=0.01)
     parser.add_argument("--weight-decay", type=float, default=1e-5)
-    parser.add_argument("--momentum", type=float, default=0.9)
+    parser.add_argument("--momentum", type=float, default=0.0)
 
     parser.add_argument("--print-precision", type=int, default=5)
     parser.add_argument("--numpy-rand-seed", type=int, default=123)

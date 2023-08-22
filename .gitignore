@@ -142,3 +142,4 @@ run_kaggle_pt/
 ckpt/
 
 *.pdf
+*.png

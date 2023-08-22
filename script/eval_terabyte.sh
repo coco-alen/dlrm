@@ -1,15 +1,20 @@
 #!/bin/bash
 echo " -----  run pytorch dlrm eval  -----"
 
-blockType="transformer"
+blockType="mlp"
+botShape="13-512-256-64"
+topShape="512-512-256-1"
+
+# blockType="transformer"
 # topShape="512-512-256-64-1"
 # botShape="13-512-256-64"
 # topShape="256-256-64-1"
 # botShape="13-256-32"
-
+# topShape="64-64-16-1"
+# botShape="13-64-8"
 
 sparseFeatureSize=${botShape##*-}
-saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/vanilla_transformer"
+saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/mlp"
 
 # ========= device & log ========= #
 if [[ $# == 1 ]]; then

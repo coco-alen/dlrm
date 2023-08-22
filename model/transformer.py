@@ -4,6 +4,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from params import args
 
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
@@ -50,7 +51,11 @@ class ScaledDotProductAttention(nn.Module):
         attn = torch.matmul(q / self.temperature, k.transpose(2, 3))
 
         if mask is not None:
-            attn = attn.masked_fill(mask == 0, -1e9)
+            if isinstance(mask, float):
+                mask = attn > mask
+                attn = attn * mask
+            else:
+                attn = attn.masked_fill(mask == 0, -1e9)
 
         attn = self.dropout(F.softmax(attn, dim=-1))
         output = torch.matmul(attn, v)
@@ -60,17 +65,17 @@ class ScaledDotProductAttention(nn.Module):
 class MultiHeadAttention(nn.Module):
     ''' Multi-Head Attention module '''
 
-    def __init__(self, n_head, d_model, d_k, d_v, dropout=0.0):
+    def __init__(self, n_head, d_model, d_k, d_v, qkv_bias=True, dropout=0.0):
         super().__init__()
 
         self.n_head = n_head
         self.d_k = d_k
         self.d_v = d_v
 
-        self.w_qs = nn.Linear(d_model, n_head * d_k, bias=True)
-        self.w_ks = nn.Linear(d_model, n_head * d_k, bias=True)
-        self.w_vs = nn.Linear(d_model, n_head * d_v, bias=True)
-        self.fc = nn.Linear(n_head * d_v, d_model, bias=True)
+        self.w_qs = nn.Linear(d_model, n_head * d_k, bias=qkv_bias)
+        self.w_ks = nn.Linear(d_model, n_head * d_k, bias=qkv_bias)
+        self.w_vs = nn.Linear(d_model, n_head * d_v, bias=qkv_bias)
+        self.fc = nn.Linear(n_head * d_v, d_model, bias=qkv_bias)
 
         self.attention = ScaledDotProductAttention(temperature=d_k ** 0.5)
 
@@ -92,9 +97,6 @@ class MultiHeadAttention(nn.Module):
         # Transpose for attention dot product: b x n x lq x dv
         q, k, v = q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)
 
-        if mask is not None:
-            mask = mask.unsqueeze(1)   # For head axis broadcasting.
-
         out, attn = self.attention(q, k, v, mask=mask)
 
         # Transpose to move the head dimension back: b x lq x n x dv
@@ -107,6 +109,87 @@ class MultiHeadAttention(nn.Module):
         return out
 
 
+class LinAngularAttention(nn.Module):
+    def __init__(
+        self,
+        in_dim,
+        d_k,
+        d_v,
+        num_heads=8,
+        qkv_bias=False,
+        attn_drop=0.0,
+        proj_drop=0.0,
+        res_kernel_size=9,
+        sparse_reg=False,
+    ):
+        super().__init__()
+        assert in_dim % num_heads == 0, "dim should be divisible by num_heads"
+        self.num_heads = num_heads
+
+        self.d_k = d_k
+        self.d_v = d_v
+
+        self.scale = d_k**-0.5
+        self.sparse_reg = sparse_reg
+
+        self.w_qs = nn.Linear(in_dim, num_heads * d_k, bias=qkv_bias)
+        self.w_ks = nn.Linear(in_dim, num_heads * d_k, bias=qkv_bias)
+        self.w_vs = nn.Linear(in_dim, num_heads * d_v, bias=qkv_bias)
+
+        self.attn_drop = nn.Dropout(attn_drop)
+        self.proj = nn.Linear(in_dim, in_dim)
+        self.proj_drop = nn.Dropout(proj_drop)
+
+        self.dconv = nn.Conv2d(
+            in_channels=self.num_heads,
+            out_channels=self.num_heads,
+            kernel_size=(res_kernel_size, 1),
+            padding=(res_kernel_size // 2, 0),
+            bias=False,
+            groups=self.num_heads,
+        )
+
+    def forward(self, q, k, v, mask=None):
+        assert q.shape == k.shape and k.shape == v.shape, "input shape must be equal"
+        N, L, C = q.shape
+
+        d_k, d_v, n_head = self.d_k, self.d_v, self.num_heads
+        sz_b, len_q, len_k, len_v = q.size(0), q.size(1), k.size(1), v.size(1)
+
+        # Pass through the pre-attention projection: b x lq x (n*dv)
+        # Separate different heads: b x lq x n x dv
+        q = self.w_qs(q).view(sz_b, n_head, len_q, d_k)
+        k = self.w_ks(k).view(sz_b, n_head, len_k, d_k)
+        v = self.w_vs(v).view(sz_b, n_head, len_v, d_v)
+
+        if self.sparse_reg:
+            attn = torch.matmul(q * self.scale, k.transpose(-2, -1))
+            attn = attn.softmax(dim=-1)
+            mask = attn > 0.02 # note that the threshold could be different; adapt to your codebases.
+            sparse = mask * attn
+
+        q = q / q.norm(dim=-1, keepdim=True)
+        k = k / k.norm(dim=-1, keepdim=True)
+        dconv_v = self.dconv(v)
+
+        attn = torch.matmul(k.transpose(-2, -1), v)
+
+        if self.sparse_reg:
+            x = (
+                torch.matmul(sparse, v)
+                + 0.5 * v
+                + 1.0 / math.pi * torch.matmul(q, attn)
+            )
+        else:
+            x = 0.5 * v + 1.0 / math.pi * torch.matmul(q, attn)
+        x = x / x.norm(dim=-1, keepdim=True)
+        x += dconv_v
+        x = x.transpose(1, 2).reshape(N, L, C)
+        x = self.proj(x)
+        x = self.proj_drop(x)
+        return x
+
+
 
 class TransformerBlock(nn.Module):
     def __init__(
@@ -115,21 +198,35 @@ class TransformerBlock(nn.Module):
         out_dim = None,
         num_heads = 8,
         ffn_expand_ratio=4.0,
-        qkv_bias=False,
-        qk_scale=None,
+        qkv_bias=True,
         drop=0.0,
         attn_drop=0.0,
         drop_path=0.0,
         act_layer=nn.GELU,
         norm_layer=nn.LayerNorm,
+        mask_limlt = None,
     ):
         super().__init__()
-        self.attn = MultiHeadAttention(
-            n_head = num_heads, 
-            d_model = in_dim,
-            d_k = in_dim // num_heads,
-            d_v = in_dim // num_heads,
-            dropout=0.0)
+
+        if args.attention == "msa":
+            self.attn = MultiHeadAttention(
+                n_head = num_heads, 
+                d_model = in_dim,
+                d_k = in_dim // num_heads,
+                d_v = in_dim // num_heads,
+                qkv_bias = qkv_bias,
+                dropout=0.0)
+        elif args.attention == "castling":
+            self.attn = LinAngularAttention(
+                in_dim = in_dim,
+                d_k = in_dim // num_heads,
+                d_v = in_dim // num_heads,
+                num_heads = num_heads,
+                qkv_bias = qkv_bias,
+                attn_drop = attn_drop,
+                proj_drop = drop,)
+        else:
+            raise NotImplementedError("attention type not implemented")
 
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         ffn_hidden_dim = int(in_dim * ffn_expand_ratio)
@@ -143,6 +240,7 @@ class TransformerBlock(nn.Module):
             drop=drop,
             norm_layer = norm_layer,
         )
+        self.mask_limlt = mask_limlt
 
         self.apply(self._init_weights)
 
@@ -162,8 +260,8 @@ class TransformerBlock(nn.Module):
                 m.bias.data.zero_()
 
     def forward(self, x):
-        x = x.unsqueeze(1)
-        x = x + self.drop_path(self.attn(x,x,x))
+        # x = x.unsqueeze(1)
+        x = x + self.drop_path(self.attn(x,x,x, self.mask_limlt))
         x = self.drop_path(self.ffn(x))
-        x = x.squeeze(1)
+        # x = x.squeeze(1)
         return x

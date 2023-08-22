@@ -2,24 +2,22 @@
 echo " -----  run pytorch dlrm train  -----"
 
 # ========= train parameters ========= #
-nbatches=2399
-lrNumWarmupSteps=$((30*nbatches))
-lrDecayStartStep=$((150*nbatches))
-lrNumDecaySteps=$((50*nbatches))
+nbatches=51211
+lrNumWarmupSteps=$((1*nbatches))
+lrDecayStartStep=$((8*nbatches))
+lrNumDecaySteps=$((2*nbatches))
 
-# blockType="mlp"
-# botShape="13-512-256-64"
-# topShape="512-512-256-1"
+blockType="mlp"
+botShape="13-512-256-64"
+topShape="512-512-256-1"
 
-blockType="transformer"
-# topShape="512-512-256-64-1"
+# blockType="transformer"
+# topShape="128-256-512-1024-2048-2048-1024-512-256-128-1"
 # botShape="13-512-256-64"
-topShape="64-64-16-1"
-botShape="13-64-8"
 
 
 sparseFeatureSize=${botShape##*-}
-saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/vanilla_transformer"
+saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/mlp"
 
 # ========= device & log ========= #
 if [[ $# == 1 ]]; then
@@ -33,6 +31,7 @@ timeNow=$(date +%Y-%m-%d_%H:%M_gpu${gpuUsed})
 CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --arch-sparse-feature-size=${sparseFeatureSize} \
     --block-type=${blockType} \
+    --attention "msa" \
     --arch-mlp-bot=${botShape} \
     --arch-mlp-top=${topShape} \
     --arch-transformer-bot=${botShape} \
@@ -40,6 +39,7 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --qr-flag \
     --data-generation=dataset \
     --data-set=terabyte \
+    --dataset-multiprocessing \
     --raw-data-file=/data/hyou37/yipin/dataset/Criteo_Terabyte/day \
     --processed-data-file=/data/hyou37/yipin/dataset/Criteo_Terabyte/.npz \
     --loss-function='bce' \
@@ -48,16 +48,17 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --learning-rate=0.0001 \
     --weight-decay=0.00001 \
     --momentum=0.0 \
-    --mini-batch-size=8192 \
-    --nepochs=3 \
-    --test-freq=1 \
+    --mini-batch-size=16384 \
+    --nepochs=20 \
+    --test-freq=51211 \
     --print-freq=512 \
     --print-time \
     --test-mini-batch-size=16384 \
     --max-ind-range=10000000 \
-    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_smallerSize.pth \
+    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}.pth \
     --use-gpu \
-    --memory-map  2>&1 | tee ${saveModelDir}/${timeNow}.log
+    --memory-map  
+    # 2>&1 | tee ${saveModelDir}/${timeNow}.log
 
     # --num-workers=64 \
     # --test-num-workers=64 \
