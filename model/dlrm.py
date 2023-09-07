@@ -158,12 +158,13 @@ class DLRM_Net(nn.Module):
                 self.top_l = create_mlp(ln_top, sigmoid_top)
             elif args.block_type == "transformer":
                 self.top_l = create_transformer(ln_top,nn.Sigmoid)
+
             if self.arch_interaction_op == "transformer":
-                self.interaction = TransformerBlock(in_dim=ln_bot[-1],
-                                                    out_dim=ln_bot[-1],
-                                                    num_heads=4,
-                                                    qkv_bias=False,
-                                                    mask_limlt = 0.1)
+                self.interaction = torch.nn.Sequential(TransformerBlock(in_dim=ln_bot[-1],
+                                                        out_dim=ln_bot[-1],
+                                                        num_heads=4,
+                                                        qkv_bias=False,
+                                                        mask_limlt = 0.1))
             if args.moe is not None:
                 self.bot_l = create_moe(ln_bot, sigmoid_bot, num_expert=args.moe)
             else:
@@ -310,13 +311,13 @@ class DLRM_Net(nn.Module):
                 ndevices = len(x)
                 (batch_size, d) = x[0].shape
                 x_tokens = []
-                modules = []
                 for i in range(ndevices):
                     x_tokens.append(torch.cat([x[i]] + ly[i], dim=-1).view((batch_size, -1, d)))
-                    modules.append(self.interaction)
                 device_ids = range(ndevices)
-                R = parallel_apply(modules, x_tokens, None, device_ids)
-                R = R.view((batch_size, -1))
+                out = parallel_apply(self.interaction_replicas, x_tokens, None, device_ids)
+                R = []
+                for each in out:
+                    R.append(each.view((batch_size, -1)))
 
         else:
             sys.exit(
@@ -439,6 +440,8 @@ class DLRM_Net(nn.Module):
             # replicate mlp (data parallelism)
             self.bot_l_replicas = replicate(self.bot_l, device_ids)
             self.top_l_replicas = replicate(self.top_l, device_ids)
+            if self.arch_interaction_op == "transformer":
+                self.interaction_replicas = replicate(self.interaction, device_ids)
             self.parallel_model_batch_size = batch_size
 
         if self.parallel_model_is_not_prepared:
