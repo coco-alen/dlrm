@@ -17,7 +17,7 @@ topShape="512-512-256-1"
 
 
 sparseFeatureSize=${botShape##*-}
-saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/mlp"
+saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/interaction_transformer"
 
 # ========= device & log ========= #
 if [[ $# == 1 ]]; then
@@ -36,7 +36,7 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --arch-mlp-top=${topShape} \
     --arch-transformer-bot=${botShape} \
     --arch-transformer-top=${topShape} \
-    --qr-flag \
+    --arch-interaction-op transformer \
     --data-generation=dataset \
     --data-set=terabyte \
     --dataset-multiprocessing \
@@ -48,17 +48,17 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --learning-rate=0.0001 \
     --weight-decay=0.00001 \
     --momentum=0.0 \
-    --mini-batch-size=16384 \
-    --nepochs=20 \
-    --test-freq=51211 \
+    --mini-batch-size=8192 \
+    --nepochs=5 \
+    --test-freq=20480 \
     --print-freq=512 \
     --print-time \
     --test-mini-batch-size=16384 \
     --max-ind-range=10000000 \
-    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}.pth \
+    --load-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_baseline2.pth \
+    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_baseline3.pth \
     --use-gpu \
-    --memory-map  
-    # 2>&1 | tee ${saveModelDir}/${timeNow}.log
+    --memory-map   2>&1 | tee ${saveModelDir}/${timeNow}.log
 
     # --num-workers=64 \
     # --test-num-workers=64 \

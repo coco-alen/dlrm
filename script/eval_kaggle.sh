@@ -1,15 +1,16 @@
 #!/bin/bash
 echo " -----  run pytorch dlrm eval  -----"
 
-# blockType="mlp"
-blockType="transformer"
+blockType="mlp"
+topShape="512-256-1"
 botShape="13-512-256-64-16"
-# topShape="512-256-1"
-# botShape="13-512-128-16"
-topShape="512-256-128-1"
+
+# blockType="transformer"
+# botShape="13-512-256-64-16"
+# topShape="512-256-128-1"
 
 sparseFeatureSize=${botShape##*-}
-saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/kaggle/vanilla_transformer"
+saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/kaggle/mlp"
 
 CUDA_VISIBLE_DEVICES=0 python -u dlrm_s_pytorch.py \
     --arch-sparse-feature-size=${sparseFeatureSize}\
@@ -26,7 +27,7 @@ CUDA_VISIBLE_DEVICES=0 python -u dlrm_s_pytorch.py \
     --inference-only \
     --test-mini-batch-size=16384 \
     --test-num-workers=64 \
-    --load-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}.pth \
+    --load-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_70epoch.pth \
     --use-gpu 
 
 echo "done"

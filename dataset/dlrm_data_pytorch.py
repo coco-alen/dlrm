@@ -411,6 +411,8 @@ def collate_wrapper_criteo_length(list_of_tuples):
 
 
 def make_criteo_data_and_loaders(args, offset_to_length_converter=False):
+    val_data = None
+    val_loader = None
     if args.mlperf_logging and args.memory_map and args.data_set == "terabyte":
         # more efficient for larger batches
         data_directory = path.dirname(args.raw_data_file)
@@ -485,6 +487,18 @@ def make_criteo_data_and_loaders(args, offset_to_length_converter=False):
                 args.dataset_multiprocessing,
             )
 
+            # val_data = CriteoDataset(
+            #     args.data_set,
+            #     args.max_ind_range,
+            #     args.data_sub_sample_rate,
+            #     args.data_randomize,
+            #     "val",
+            #     args.raw_data_file,
+            #     args.processed_data_file,
+            #     args.memory_map,
+            #     args.dataset_multiprocessing,
+            # )
+
             test_data = CriteoDataset(
                 args.data_set,
                 args.max_ind_range,
@@ -505,7 +519,14 @@ def make_criteo_data_and_loaders(args, offset_to_length_converter=False):
                 max_ind_range=args.max_ind_range,
                 split="train",
             )
-
+            # val_loader = data_loader_terabyte.DataLoader(
+            #     data_directory=data_directory,
+            #     data_filename=data_filename,
+            #     days=[23],
+            #     batch_size=args.test_mini_batch_size,
+            #     max_ind_range=args.max_ind_range,
+            #     split="val",
+            # )
             test_loader = data_loader_terabyte.DataLoader(
                 data_directory=data_directory,
                 data_filename=data_filename,
@@ -527,17 +548,17 @@ def make_criteo_data_and_loaders(args, offset_to_length_converter=False):
             args.dataset_multiprocessing,
         )
 
-        val_data = CriteoDataset(
-            args.data_set,
-            args.max_ind_range,
-            args.data_sub_sample_rate,
-            args.data_randomize,
-            "val",
-            args.raw_data_file,
-            args.processed_data_file,
-            args.memory_map,
-            args.dataset_multiprocessing,
-        )
+        # val_data = CriteoDataset(
+        #     args.data_set,
+        #     args.max_ind_range,
+        #     args.data_sub_sample_rate,
+        #     args.data_randomize,
+        #     "val",
+        #     args.raw_data_file,
+        #     args.processed_data_file,
+        #     args.memory_map,
+        #     args.dataset_multiprocessing,
+        # )
 
         test_data = CriteoDataset(
             args.data_set,
@@ -565,15 +586,15 @@ def make_criteo_data_and_loaders(args, offset_to_length_converter=False):
             drop_last=False,  # True
         )
 
-        val_loader = torch.utils.data.DataLoader(
-            val_data,
-            batch_size=args.test_mini_batch_size,
-            shuffle=False,
-            num_workers=args.test_num_workers,
-            collate_fn=collate_wrapper_criteo,
-            pin_memory=False,
-            drop_last=False,  # True
-        )
+        # val_loader = torch.utils.data.DataLoader(
+        #     val_data,
+        #     batch_size=args.test_mini_batch_size,
+        #     shuffle=False,
+        #     num_workers=args.test_num_workers,
+        #     collate_fn=collate_wrapper_criteo,
+        #     pin_memory=False,
+        #     drop_last=False,  # True
+        # )
 
         test_loader = torch.utils.data.DataLoader(
             test_data,

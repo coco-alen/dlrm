@@ -80,6 +80,7 @@ import mlperf_logger
 import numpy as np
 import optim.rwsadagrad as RowWiseSparseAdagrad
 import sklearn.metrics
+from sklearn.metrics import roc_auc_score
 
 # pytorch
 import torch
@@ -164,6 +165,8 @@ def inference(
     if args.mlperf_logging:
         scores = []
         targets = []
+    scores = []
+    targets = []
 
     for i, testBatch in enumerate(test_ld):
         # early exit if nbatches was set by the user and was exceeded
@@ -218,6 +221,9 @@ def inference(
                 test_accu += A_test
                 test_samp += mbs_test
 
+                scores.append(S_test)
+                targets.append(T_test)
+
     if args.mlperf_logging:
         with record_function("DLRM mlperf sklearn metrics compute"):
             scores = np.concatenate(scores, axis=0)
@@ -251,7 +257,12 @@ def inference(
         acc_test = validation_results["accuracy"]
     else:
         acc_test = test_accu / test_samp
-        writer.add_scalar("Test/Acc", acc_test, log_iter)
+        
+        # calu AUC
+        scores = np.concatenate(scores, axis=0)
+        targets = np.concatenate(targets, axis=0)
+        auc_test = roc_auc_score(targets, scores)
+        writer.add_scalar("Test/AUC", auc_test, log_iter)
 
     model_metrics_dict = {
         "nepochs": args.nepochs,
@@ -283,16 +294,24 @@ def inference(
             flush=True,
         )
     else:
-        is_best = acc_test > best_acc_test
-        if is_best:
+        if acc_test > best_acc_test:
             best_acc_test = acc_test
+
+        is_best = auc_test > best_auc_test
+        if is_best:
+            best_auc_test = auc_test
+
         print(
             " accuracy {:3.3f} %, best {:3.3f} %".format(
                 acc_test * 100, best_acc_test * 100
             ),
             flush=True,
         )
-    return model_metrics_dict, is_best, best_acc_test
+        print(
+            " AUC {:3.3f}, best {:3.3f}".format(auc_test, best_auc_test),
+            flush=True,
+        )
+    return model_metrics_dict, is_best, best_acc_test, best_auc_test
 
 
 def run():
@@ -729,7 +748,7 @@ def run():
             ld_gAUC_test = ld_model["test_auc"]
         ld_acc_test = ld_model["test_acc"]
         if not args.inference_only:
-            # optimizer.load_state_dict(ld_model["opt_state_dict"])
+            optimizer.load_state_dict(ld_model["opt_state_dict"])
             best_acc_test = ld_acc_test
             total_loss = ld_total_loss
 
@@ -997,24 +1016,11 @@ def run():
                         # don't measure training iter time in a test iteration
                         if args.mlperf_logging:
                             previous_iteration_time = None
-                        print(
-                            "Validating at - {}/{} of epoch {},".format(j + 1, nbatches, k)
-                        )
-                        inference(
-                            args,
-                            dlrm,
-                            best_acc_test,
-                            best_auc_test,
-                            val_ld,
-                            device,
-                            use_gpu,
-                            log_iter,
-                        )
 
                         print(
                             "Testing at - {}/{} of epoch {},".format(j + 1, nbatches, k)
                         )
-                        model_metrics_dict, is_best, best_acc_test = inference(
+                        model_metrics_dict, is_best, best_acc_test, best_auc_test = inference(
                             args,
                             dlrm,
                             best_acc_test,
@@ -1107,7 +1113,7 @@ def run():
                 )
         else:
             print("Testing for inference only")
-            print(torch.cuda.memory_summary())
+            # print(torch.cuda.memory_summary())
             inference(
                 args,
                 dlrm,

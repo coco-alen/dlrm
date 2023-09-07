@@ -39,13 +39,13 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --optimizer='sgd' \
     --learning-rate=0.0001 \
     --mini-batch-size=4096 \
+    --test-mini-batch-size=16384 \
     --nepochs=250 \
-    --test-freq=5120 \
-    --print-freq=512 \
+    --test-freq=64 \
+    --print-freq=64 \
     --print-time \
     --num-workers=64 \
     --test-num-workers=64 \
-    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_onehot_lableSmooth.pth \
     --use-gpu  \
     --dataset-multiprocessing \
     --one-hot \
@@ -53,7 +53,7 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     # 2>&1 | tee ${saveModelDir}/${timeNow}.log
     # --moe \
 
-    
+        # --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_onehot_lableSmooth.pth \
     # 2>&1 | tee ${saveModelDir}/${timeNow}.log
 
     # --lr-num-warmup-steps=${lrNumWarmupSteps} \

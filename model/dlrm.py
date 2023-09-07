@@ -309,14 +309,15 @@ class DLRM_Net(nn.Module):
             else:
                 # single-node multi-device run
                 ndevices = len(x)
-                (batch_size, d) = x[0].shape
                 x_tokens = []
                 for i in range(ndevices):
+                    (batch_size, d) = x[i].shape
                     x_tokens.append(torch.cat([x[i]] + ly[i], dim=-1).view((batch_size, -1, d)))
                 device_ids = range(ndevices)
                 out = parallel_apply(self.interaction_replicas, x_tokens, None, device_ids)
                 R = []
                 for each in out:
+                    batch_size = each.size()[0]
                     R.append(each.view((batch_size, -1)))
 
         else:
