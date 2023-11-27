@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import pickle
 # pytorch
 import torch
 import torch.nn as nn
@@ -28,11 +29,11 @@ class FFN(nn.Module):
         self.norm = norm_layer(out_features, eps=1e-6)
 
     def forward(self, x):
-        x = self.fc1(x)
-        x = self.act(x)
-        x = self.drop(x)
-        x = self.fc2(x)
-        x = self.drop(x)
+        # x = self.fc1(x)
+        # x = self.act(x)
+        # x = self.drop(x)
+        # x = self.fc2(x)
+        # x = self.drop(x)
         x = self.norm(x)
         return x
 
@@ -50,14 +51,23 @@ class ScaledDotProductAttention(nn.Module):
 
         attn = torch.matmul(q / self.temperature, k.transpose(2, 3))
 
-        if mask is not None:
-            if isinstance(mask, float):
-                mask = attn > mask
-                attn = attn * mask
-            else:
-                attn = attn.masked_fill(mask == 0, -1e9)
-
+        # if mask is not None:
+        #     if isinstance(mask, float):
+        #         mask = attn > mask
+        #         attn = attn * mask
+        #     else:
+        #         attn = attn.masked_fill(mask == 0, -1e9)
+        # else:
+        #     mask = torch.mean(torch.abs(attn))
+        #     mask = torch.abs(attn) > mask
+        #     pickle.dump(attn, open("attn_noMask.pkl", "wb"))
+        #     attn = attn * mask
+            # attn = torch.zeros_like(attn)
+        pickle.dump(attn, open("attn.pkl", "wb"))
         attn = self.dropout(F.softmax(attn, dim=-1))
+        pickle.dump(attn, open("attn_softmax.pkl", "wb"))
+        # print(attn)
+
         output = torch.matmul(attn, v)
 
         return output, attn
@@ -96,8 +106,11 @@ class MultiHeadAttention(nn.Module):
 
         # Transpose for attention dot product: b x n x lq x dv
         q, k, v = q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)
-
+        # v = v.transpose(1, 2)
+        
         out, attn = self.attention(q, k, v, mask=mask)
+        # attn = torch.ones(sz_b, n_head, len_q, len_k, device=q.device) * (1/len_q)
+        out = torch.matmul(attn, v)
 
         # Transpose to move the head dimension back: b x lq x n x dv
         # Combine the last two dimensions to concatenate all the heads together: b x lq x (n*dv)
@@ -261,7 +274,7 @@ class TransformerBlock(nn.Module):
 
     def forward(self, x):
         # x = x.unsqueeze(1)
-        x = x + self.drop_path(self.attn(x,x,x, self.mask_limlt))
+        # x = x + self.drop_path(self.attn(x,x,x, self.mask_limlt))
         x = self.drop_path(self.ffn(x))
         # x = x.squeeze(1)
         return x

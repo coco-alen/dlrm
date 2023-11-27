@@ -14,7 +14,7 @@ topShape="512-512-256-1"
 # botShape="13-64-8"
 
 sparseFeatureSize=${botShape##*-}
-saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/mlp"
+saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/interaction_transformer"
 
 # ========= device & log ========= #
 if [[ $# == 1 ]]; then
@@ -39,10 +39,10 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --test-mini-batch-size=16384 \
     --test-num-workers=64 \
     --max-ind-range=10000000 \
-    --load-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_baseline.pth \
+    --load-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_noSparse.pth \
     --use-gpu \
     --throughput \
-    --memory-map
+    --memory-map 2>&1 | tee ${saveModelDir}/eval.log
 
 echo "done"
 

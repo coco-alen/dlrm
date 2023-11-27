@@ -62,6 +62,7 @@ def get_params():
     parser.add_argument("--qr-threshold", type=int, default=200)
     parser.add_argument("--qr-operation", type=str, default="mult")
     parser.add_argument("--qr-collisions", type=int, default=4)
+    parser.add_argument("--ad-flag", action="store_true", default=False)
     # activations and loss
     parser.add_argument("--activation-function", type=str, default="relu")
     parser.add_argument("--loss-function", type=str, default="mse")  # or bce or wbce

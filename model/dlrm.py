@@ -20,6 +20,8 @@ from model.transformer import TransformerBlock
 # quotient-remainder trick
 from model.qr_embedding_bag import QREmbeddingBag
 from model.create_block import create_mlp, create_transformer,create_moe
+from model.adaptive_embedding_bag import AdaptiveEmbeddingBag
+
 from params import args
 
 ### define dlrm in PyTorch ###
@@ -52,6 +54,18 @@ class DLRM_Net(nn.Module):
                     low=-np.sqrt(1 / n), high=np.sqrt(1 / n), size=(n, _m)
                 ).astype(np.float32)
                 EE.embs.weight.data = torch.tensor(W, requires_grad=True)
+            elif args.ad_flag and n > 64:
+                cut_point = n // 8
+                cutoffs = []
+                while cut_point > 0:
+                    cutoffs.append(cut_point)
+                    cut_point = cut_point // 4
+                EE = AdaptiveEmbeddingBag(
+                    n,
+                    m,
+                    sorted(cutoffs),
+                    div_value=4.0,
+                )
             else:
                 EE = nn.EmbeddingBag(n, m, mode="sum", sparse=True)
                 # initialize embeddings
@@ -164,7 +178,7 @@ class DLRM_Net(nn.Module):
                                                         out_dim=ln_bot[-1],
                                                         num_heads=4,
                                                         qkv_bias=False,
-                                                        mask_limlt = 0.1))
+                                                        mask_limlt = None))
             if args.moe is not None:
                 self.bot_l = create_moe(ln_bot, sigmoid_bot, num_expert=args.moe)
             else:

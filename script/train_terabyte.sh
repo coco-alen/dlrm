@@ -17,7 +17,7 @@ topShape="512-512-256-1"
 
 
 sparseFeatureSize=${botShape##*-}
-saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/interaction_transformer"
+saveModelDir="/data/hyou37/yipin/program/dlrm/ckpt/terabyte/mlp"
 
 # ========= device & log ========= #
 if [[ $# == 1 ]]; then
@@ -36,7 +36,7 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --arch-mlp-top=${topShape} \
     --arch-transformer-bot=${botShape} \
     --arch-transformer-top=${topShape} \
-    --arch-interaction-op transformer \
+    --arch-interaction-op 'transformer' \
     --data-generation=dataset \
     --data-set=terabyte \
     --dataset-multiprocessing \
@@ -55,11 +55,12 @@ CUDA_VISIBLE_DEVICES=${gpuUsed} python -u dlrm_s_pytorch.py \
     --print-time \
     --test-mini-batch-size=16384 \
     --max-ind-range=10000000 \
-    --load-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_baseline2.pth \
-    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_baseline3.pth \
+    --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_noUse.pth \
     --use-gpu \
     --memory-map   2>&1 | tee ${saveModelDir}/${timeNow}.log
 
+    # --save-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_zeroAttn.pth \
+    # --load-model=${saveModelDir}/${blockType}_bot-${botShape}_top-${topShape}_baseline3.pth \
     # --num-workers=64 \
     # --test-num-workers=64 \
     # --dataset-multiprocessing  #  The Terabyte dataset can be multiprocessed in an environment with more than 24 CPU cores and at least 1 TB of memory

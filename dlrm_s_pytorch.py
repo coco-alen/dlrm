@@ -895,6 +895,18 @@ def run():
 
                     mbs = T.shape[0]  # = args.mini_batch_size except maybe for last
 
+                    # ==============  save sample input  ===============
+                    # import pickle
+                    # sample_X = X.detach().cpu()
+                    # sample_lS_o = [S_o.detach().cpu() for S_o in lS_o]
+                    # sample_lS_i = [S_i.detach().cpu() for S_i in lS_i]
+                    # with open('./sample_data/sample_X.pickle', 'wb') as f:
+                    #     pickle.dump(sample_X, f)
+                    # with open('./sample_data/sample_lS_o.pickle', 'wb') as f:
+                    #     pickle.dump(sample_lS_o, f)
+                    # with open('./sample_data/sample_lS_i.pickle', 'wb') as f:
+                    #     pickle.dump(sample_lS_i, f)
+
                     # forward pass
                     Z = dlrm_wrap(
                         X,
